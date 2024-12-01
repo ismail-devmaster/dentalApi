@@ -48,13 +48,23 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Check if the specialty exists
+    const specialtyExists = await prisma.specialty.findUnique({
+      where: { id: parseInt(specialtyId) },
+    });
+
+    if (!specialtyExists) {
+      return res.status(400).json({ error: "Specialty not found" });
+    }
+
     // Create the doctor
     const newDoctor = await prisma.doctor.create({
       data: {
         firstName,
         lastName,
+        fullName: `${firstName} ${lastName}`, // Generate fullName here
         specialty: {
-          connect: { id: parseInt(specialtyId) }, // Connect to existing specialty
+          connect: { id: parseInt(specialtyId) },
         },
       },
     });
@@ -77,14 +87,24 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Check if the specialty exists
+    const specialtyExists = await prisma.specialty.findUnique({
+      where: { id: parseInt(specialtyId) },
+    });
+
+    if (!specialtyExists) {
+      return res.status(400).json({ error: "Specialty not found" });
+    }
+
     // Update the doctor
     const updatedDoctor = await prisma.doctor.update({
       where: { id: parseInt(id) },
       data: {
         firstName,
         lastName,
+        fullName: `${firstName} ${lastName}`, // Update fullName when first or last name changes
         specialty: {
-          connect: { id: parseInt(specialtyId) }, // Update specialty connection
+          connect: { id: parseInt(specialtyId) },
         },
       },
     });

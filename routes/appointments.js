@@ -21,14 +21,14 @@ router.get("/", async (req, res) => {
             lastName: true,
           },
         },
-        appointmentType: {
+        type: {
           select: {
             type: true,
           },
         },
         status: {
           select: {
-            status: true, // Include the appointment status
+            status: true,
           },
         },
       },
@@ -60,14 +60,14 @@ router.get("/:id", async (req, res) => {
             lastName: true,
           },
         },
-        appointmentType: {
+        type: {
           select: {
             type: true,
           },
         },
         status: {
           select: {
-            status: true, // Include the appointment status
+            status: true,
           },
         },
       },
@@ -94,9 +94,9 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Find the status ID based on the status string (upcoming, completed, cancelled)
+    // Find the status ID based on the AppointmentStatusEnum
     const appointmentStatus = await prisma.appointmentStatus.findUnique({
-      where: { status },
+      where: { status: status }, // status should be one of: SCHEDULED, CONFIRMED, CANCELLED, COMPLETED, MISSED
     });
 
     if (!appointmentStatus) {
@@ -106,11 +106,11 @@ router.post("/", async (req, res) => {
     // Create the appointment
     const newAppointment = await prisma.appointment.create({
       data: {
-        patientId,
-        doctorId,
-        typeId,
-        date,
-        time,
+        patientId: parseInt(patientId),
+        doctorId: parseInt(doctorId),
+        typeId: parseInt(typeId),
+        date: new Date(date),
+        time: new Date(time),
         additionalNotes,
         statusId: appointmentStatus.id,
       },
@@ -200,14 +200,14 @@ router.get("/patient/:patientId", async (req, res) => {
             lastName: true,
           },
         },
-        appointmentType: {
+        type: {
           select: {
             type: true,
           },
         },
         status: {
           select: {
-            status: true, // Include the appointment status
+            status: true,
           },
         },
       },

@@ -6,28 +6,30 @@ const router = express.Router();
 
 // Add a patient to the queue
 router.post("/", async (req, res) => {
-  const {
-    patientId,
-    status,
-    estimatedWaitTime,
-    arrivalTime,
-    timeWaited,
-    estimatedTimeToDoctor,
-  } = req.body;
   try {
-    const queueEntry = await prisma.queue.create({
+    const { patientId, status, estimatedWaitTime, timeWaited, estimatedTimeToDoctor } = req.body;
+
+    // Validate required fields
+    if (!patientId || !status) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Create queue entry
+    const newQueueEntry = await prisma.queue.create({
       data: {
-        patientId,
-        status,
-        estimatedWaitTime,
-        arrivalTime,
-        timeWaited,
-        estimatedTimeToDoctor,
+        patientId: parseInt(patientId),
+        status: status, // should be one of: WAITING, IN_PROGRESS, COMPLETED, SKIPPED
+        estimatedWaitTime: parseInt(estimatedWaitTime),
+        arrivalTime: new Date(),
+        timeWaited: parseInt(timeWaited),
+        estimatedTimeToDoctor: parseInt(estimatedTimeToDoctor),
       },
     });
-    res.status(201).json(queueEntry);
+
+    res.status(201).json(newQueueEntry);
   } catch (error) {
-    res.status(500).json({ message: "Error adding to queue", error });
+    console.error(error);
+    res.status(500).json({ error: "Failed to create queue entry" });
   }
 });
 

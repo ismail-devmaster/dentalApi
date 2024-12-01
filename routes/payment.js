@@ -4,6 +4,37 @@ const prisma = new PrismaClient();
 
 const router = express.Router();
 
+// GET all payments
+router.get("/", async (req, res) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      include: {
+        doctor: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        patient: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        status: {
+          select: {
+            status: true,
+          },
+        },
+      },
+    });
+    res.status(200).json(payments);
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ error: "Failed to fetch payments" });
+  }
+});
+
 // GET all payments for a specific patient by patient ID
 router.get("/patient/:id", async (req, res) => {
   try {
@@ -91,24 +122,16 @@ router.get("/:id", async (req, res) => {
 // POST create a new payment
 router.post("/", async (req, res) => {
   try {
-    const { patientId, description, amount, doctorId, date, time, status } =
-      req.body;
+    const { patientId, description, amount, doctorId, date, time, status } = req.body;
 
     // Validate required fields
-    if (
-      !patientId ||
-      !amount ||
-      !doctorId ||
-      !date ||
-      !time ||
-      !status
-    ) {
+    if (!patientId || !amount || !doctorId || !date || !time || !status) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Find the status ID based on the status string (paid or pending)
+    // Find the status ID based on PaymentStatusEnum
     const paymentStatus = await prisma.paymentStatus.findUnique({
-      where: { status },
+      where: { status: status }, // status should be one of: PENDING, PAID, OVERDUE
     });
 
     if (!paymentStatus) {
@@ -118,10 +141,10 @@ router.post("/", async (req, res) => {
     // Create the payment
     const newPayment = await prisma.payment.create({
       data: {
-        patientId,
+        patientId: parseInt(patientId),
         description,
-        amount,
-        doctorId,
+        amount: parseFloat(amount),
+        doctorId: parseInt(doctorId),
         date: new Date(date),
         time: new Date(time),
         statusId: paymentStatus.id,

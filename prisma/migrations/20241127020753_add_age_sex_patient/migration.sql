@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Patient" ADD COLUMN     "age" INTEGER,
-ADD COLUMN     "sex" TEXT,
-ALTER COLUMN "dateOfBirth" DROP NOT NULL,
-ALTER COLUMN "dateOfBirth" SET DATA TYPE TEXT;

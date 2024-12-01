@@ -45,12 +45,20 @@ router.get("/:id", async (req, res) => {
 // POST create a new patient
 router.post("/", async (req, res) => {
   try {
-    const { firstName, lastName, age, sexId, phone, email, medicalHistory } =
-      req.body;
+    const { firstName, lastName, age, gender, phone, email, medicalHistory } = req.body;
 
     // Validate required fields
-    if (!firstName || !lastName || !age || !sexId) {
+    if (!firstName || !lastName || !age || !gender) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Find the sex ID based on the gender
+    const sex = await prisma.sex.findFirst({
+      where: { gender: gender }, // gender should be one of: MALE, FEMALE
+    });
+
+    if (!sex) {
+      return res.status(400).json({ error: "Invalid gender" });
     }
 
     // Create the patient
@@ -58,8 +66,8 @@ router.post("/", async (req, res) => {
       data: {
         firstName,
         lastName,
-        age,
-        sexId, // Use sexId instead of sex
+        age: parseInt(age),
+        sexId: sex.id,
         phone,
         email,
         medicalHistory,
@@ -68,7 +76,7 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(newPatient);
   } catch (error) {
-    console.error(error);
+    console.error("Error creating patient:", error); // Log error for more details
     res.status(500).json({ error: "Failed to create patient" });
   }
 });
@@ -77,12 +85,20 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, age, sexId, phone, email, medicalHistory } =
-      req.body;
+    const { firstName, lastName, age, gender, phone, email, medicalHistory } = req.body;
 
     // Validate required fields
-    if (!firstName || !lastName || !age || !sexId) {
+    if (!firstName || !lastName || !age || !gender || !phone || !email || !medicalHistory) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Find the sex ID based on the gender enum
+    const sex = await prisma.sex.findUnique({
+      where: { gender: gender },
+    });
+
+    if (!sex) {
+      return res.status(400).json({ error: "Invalid gender" });
     }
 
     // Update the patient
@@ -91,19 +107,19 @@ router.put("/:id", async (req, res) => {
       data: {
         firstName,
         lastName,
-        age,
-        sexId, // Use sexId instead of sex
+        fullName: `${firstName} ${lastName}`, // Update fullName when first or last name changes
+        age: parseInt(age),
+        sexId: sex.id,
         phone,
         email,
         medicalHistory,
       },
     });
 
-    res.status(200).json(updatedPatient);
+    res.status(200).json({ message: "Patient updated successfully", patient: updatedPatient });
   } catch (error) {
     console.error(error);
     if (error.code === "P2025") {
-      // Prisma error code when the patient is not found
       return res.status(404).json({ error: "Patient not found" });
     }
     res.status(500).json({ error: "Failed to update patient" });
@@ -120,7 +136,7 @@ router.delete("/:id", async (req, res) => {
       where: { id: parseInt(id) },
     });
 
-    res.status(200).json(deletedPatient);
+    res.status(200).json({ message: "Patient deleted successfully", patient: deletedPatient });
   } catch (error) {
     console.error(error);
     if (error.code === "P2025") {
