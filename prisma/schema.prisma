@@ -17,10 +17,8 @@ enum Gender {
 }
 
 enum AppointmentStatusEnum {
-  SCHEDULED
-  CONFIRMED
-  CHECKED_IN
-  IN_PROGRESS
+  WAITING
+  UPCOMING
   COMPLETED
   CANCELLED
   MISSED

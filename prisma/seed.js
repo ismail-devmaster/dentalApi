@@ -139,10 +139,8 @@ async function main() {
 
   // Seed Appointment Status
   const appointmentStatusData = [
-    { status: 'SCHEDULED' },
-    { status: 'CONFIRMED' },
-    { status: 'CHECKED_IN' },
-    { status: 'IN_PROGRESS' },
+    { status: 'WAITING' },
+    { status: 'UPCOMING' },
     { status: 'COMPLETED' },
     { status: 'CANCELLED' },
     { status: 'MISSED' }
