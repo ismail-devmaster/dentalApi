@@ -2,15 +2,38 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function main() {
+  // Clear existing data (optional, remove if you want to keep existing data)
+  await prisma.payment.deleteMany({});
+  await prisma.appointment.deleteMany({});
+  await prisma.queue.deleteMany({});
+  await prisma.doctor.deleteMany({});
+  await prisma.patient.deleteMany({});
+  await prisma.specialty.deleteMany({});
+  await prisma.sex.deleteMany({});
+  await prisma.appointmentStatus.deleteMany({});
+  await prisma.appointmentType.deleteMany({});
+  await prisma.paymentStatus.deleteMany({});
+
+  // Now seed the data
+  console.log('Seeding fresh data...');
+
   // Seed Sex
   const sexData = [
     { gender: 'MALE' },
     { gender: 'FEMALE' },
     { gender: 'OTHER' }
   ]
-  const sexRecords = await Promise.all(
-    sexData.map(sex => prisma.sex.create({ data: sex }))
-  )
+
+  // Create sex records one by one to handle dependencies
+  const sexRecords = [];
+  for (const sex of sexData) {
+    const record = await prisma.sex.upsert({
+      where: { gender: sex.gender },
+      update: {},
+      create: sex
+    });
+    sexRecords.push(record);
+  }
 
   // Seed Specialty
   const specialtyData = [
@@ -21,7 +44,13 @@ async function main() {
     { name: 'Orthopedics' }
   ]
   const specialtyRecords = await Promise.all(
-    specialtyData.map(specialty => prisma.specialty.create({ data: specialty }))
+    specialtyData.map(specialty => 
+      prisma.specialty.upsert({
+        where: { name: specialty.name },
+        update: {},
+        create: specialty
+      })
+    )
   )
 
   // Seed Doctors
@@ -298,7 +327,7 @@ async function main() {
     queueData.map(queue => prisma.queue.create({ data: queue }))
   )
 
-  console.log('Seed data created successfully!')
+  console.log('Database has been seeded!')
 }
 
 main()

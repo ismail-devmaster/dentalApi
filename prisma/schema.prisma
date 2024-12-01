@@ -45,7 +45,7 @@ enum QueueStatusEnum {
 
 model Sex {
   id        Int       @id @default(autoincrement())
-  gender    Gender
+  gender    Gender    @unique
   patients  Patient[] @relation("SexPatients")
 }
 
