@@ -59,7 +59,7 @@ router.post("/", async (req, res) => {
         firstName,
         lastName,
         age,
-        sexId, // Use sexId instead of sex
+        sexId, // Hello world
         phone,
         email,
         medicalHistory,
